@@ -1,5 +1,7 @@
 #include "interface.h"
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "video_player.h"
 
@@ -9,6 +11,8 @@ bool show_info_panel = true;
 int slider_position;
 int last_mouse_motion;
 bool show_interface;
+
+bool loading_source = false;
 
 bool fullscreen;
 
@@ -74,7 +78,7 @@ void set_torrent_info(const char** torrent_info)
 
 void construct_interface(SDL_Window *window)
 {
-    show_interface = 1;//io.WantCaptureMouse || SDL_GetTicks() - last_mouse_motion < 2000;
+    show_interface = true;//io.WantCaptureMouse || SDL_GetTicks() - last_mouse_motion < 2000;
 
     //ImGui::ShowDemoWindow();
     SDL_ShowCursor(show_interface);
@@ -83,12 +87,12 @@ void construct_interface(SDL_Window *window)
     {
         ImGui::SetNextWindowPos(ImVec2(margin, margin));
         ImGui::SetNextItemWidth(350);
-        ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
 
-        ImGui::Text("Source");
+        //ImGui::Text("Video source");
 
         static char str1[1024] = "";
-        ImGui::InputTextWithHint("", "URL"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
+        ImGui::InputTextWithHint("", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
         ImGui::SameLine();
         if (ImGui::Button("Stream"))
         {
@@ -97,6 +101,32 @@ void construct_interface(SDL_Window *window)
 
             const char *cmd[] = {"loadfile", str1, NULL};
             mpv_command_async(mpv, 0, cmd);
+
+            loading_source = true;
+        }
+
+        if (loading_source == true) {
+            ImGui::OpenPopup("loading video");
+            loading_source = false;
+            loaded_video = 0;
+        }
+
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | 
+                                 ImGuiWindowFlags_AlwaysAutoResize | 
+                                 ImGuiWindowFlags_NoTitleBar | 
+                                 ImGuiWindowFlags_NoMove;
+
+        if (ImGui::BeginPopupModal("loading video", nullptr, flags)){
+            
+            ImGui::Text("Loading video...");
+            
+            if (loaded_video == 1)
+            {
+                loaded_video = 0;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
 
         /*
@@ -105,7 +135,7 @@ void construct_interface(SDL_Window *window)
         help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
         HelpMarker(help_marker.c_str());
         */
-
+        
         ImGui::End();
     }
 

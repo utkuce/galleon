@@ -1,9 +1,6 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <string>
-#include <vector>
-
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
 

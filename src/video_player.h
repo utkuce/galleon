@@ -31,6 +31,9 @@ void set_room_link(const char*);
 void set_torrent_info(const char**);
 void set_new_peer(const char*);
 
+// events
+extern int loaded_video;
+
 #ifdef __cplusplus
 }
 #endif

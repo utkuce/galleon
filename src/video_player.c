@@ -36,6 +36,7 @@ mpv_handle *mpv;
 mpv_render_context *mpv_gl;
 int redraw;
 int position, duration;
+int loaded_video;
 
 void initialize_mpv()
 {
@@ -163,7 +164,13 @@ void mpv_events(SDL_Event event)
                 
             }
 
-            printf("event: %s\n", mpv_event_name(mp_event->event_id));
+            const char* event_name = mpv_event_name(mp_event->event_id);
+            //printf("event: %s\n", event_name);
+
+            if (strcmp(event_name, "file-loaded") == 0)
+            {
+                loaded_video = 1;
+            }
         }
     }
 }

@@ -165,8 +165,6 @@ void construct_interface(SDL_Window *window)
 
     if (show_interface)
     {
-        static int volume = 100.0f;
-
         int width, height;
         SDL_GetWindowSize(window, &width, &height);
         ImGui::SetNextWindowSize(ImVec2(width - margin * 2, 0));
@@ -197,16 +195,6 @@ void construct_interface(SDL_Window *window)
         {
         }
 
-        ImGui::SameLine(0, 10);
-
-        static bool mute;
-        if (ImGui::Checkbox("Mute", &mute))
-        {
-            const char *cmd[] = {"mute", mute ? "yes" : "no", NULL};
-        }
-
-        ImGui::SameLine(0, 10);
-*/
         if (ImGui::Button("Play/Pause"))
         {
             mpv_toggle_pause();
@@ -219,13 +207,34 @@ void construct_interface(SDL_Window *window)
         }
 
         ImGui::SameLine(0, 10);
-        //ImGui::SetNextItemWidth(150);
-        //static int subtitle_selection = 0;
-        //ImGui::Combo("Subtitles", &subtitle_selection, "None\0Subtitle1\0Subtitle2\0\0", 10);
-        //ImGui::SameLine(0, 10);
         ImGui::Checkbox("Show Info Panel", &show_info_panel);
         //ImGui::SameLine(0, 10);
         //ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+
+        ImGui::SameLine(0, 10);
+        ImGui::SetNextItemWidth(100);
+        static int volume = 100.0f;
+        if (ImGui::SliderInt("Volume", &volume, 0, 100))
+        {
+            const char *cmd_volume[] = {"set", "volume", std::to_string(volume).c_str(), NULL};
+            mpv_command_async(mpv, 0, cmd_volume);
+        }
+
+        /*
+        ImGui::SameLine(0, 10);
+        ImGui::SetNextItemWidth(150);
+        static int subtitle_selection = 0;
+        ImGui::Combo("Subtitles", &subtitle_selection, "None\0Subtitle1\0Subtitle2\0\0", 10);
+
+        
+        ImGui::SameLine(0, 10);
+        static bool mute;
+        if (ImGui::Checkbox("Mute", &mute))
+        {
+            const char *cmd_mute[] = {"set", "mute", mute ? "yes" : "no", NULL};
+            mpv_command_async(mpv, 0, cmd_mute);
+        }
+        */
 
         ImGui::End();
     }

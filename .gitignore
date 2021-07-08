@@ -4,3 +4,5 @@ CMakeCache.txt
 *.cmake
 Makefile
 imgui.ini
+_CPack_Packages
+install_manifest.txt

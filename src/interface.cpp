@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "video_player.h"
+//#include "util.h"
 
 int margin = 40;
 bool show_info_panel = true;
@@ -13,8 +14,7 @@ int last_mouse_motion;
 bool show_interface;
 
 bool loading_source = false;
-
-bool fullscreen;
+bool fullscreen = false;
 
 void toggle_fullscreen(SDL_Window* window)
 {
@@ -78,7 +78,10 @@ void set_torrent_info(const char** torrent_info)
 
 void construct_interface(SDL_Window *window)
 {
-    show_interface = true;//io.WantCaptureMouse || SDL_GetTicks() - last_mouse_motion < 2000;
+    
+    show_interface = ImGui::GetIO().WantCaptureMouse || 
+                     ImGui::GetIO().WantCaptureKeyboard ||
+                     SDL_GetTicks() - last_mouse_motion < 2000;
 
     //ImGui::ShowDemoWindow();
     SDL_ShowCursor(show_interface);
@@ -87,12 +90,14 @@ void construct_interface(SDL_Window *window)
     {
         ImGui::SetNextWindowPos(ImVec2(margin, margin));
         ImGui::SetNextItemWidth(350);
-        ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | 
+                                 ImGuiWindowFlags_AlwaysAutoResize | 
+                                 ImGuiWindowFlags_NoTitleBar);
 
         //ImGui::Text("Video source");
 
         static char str1[1024] = "";
-        ImGui::InputTextWithHint("", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
+        ImGui::InputTextWithHint("##vidsrc", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
         ImGui::SameLine();
         if (ImGui::Button("Stream"))
         {
@@ -105,7 +110,8 @@ void construct_interface(SDL_Window *window)
             loading_source = true;
         }
 
-        if (loading_source == true) {
+        if (loading_source == true) 
+        {
             ImGui::OpenPopup("loading video");
             loading_source = false;
             loaded_video = 0;
@@ -124,6 +130,11 @@ void construct_interface(SDL_Window *window)
             {
                 loaded_video = 0;
                 ImGui::CloseCurrentPopup();
+
+                const char *cmd[] = {"set", "pause", "true", NULL};
+                mpv_command_async(mpv, 0, cmd);
+
+                
             }
 
             ImGui::EndPopup();
@@ -135,7 +146,20 @@ void construct_interface(SDL_Window *window)
         help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
         HelpMarker(help_marker.c_str());
         */
+
+        static char str2[1024] = "";
+        ImGui::InputTextWithHint("##mpvcmd", "mpv command"/*"Enter magnet link or url"*/, str2, IM_ARRAYSIZE(str2));
+        ImGui::SameLine();
+        if (ImGui::Button("Run"))
+            mpv_command_string(mpv, str2);
+
         
+        ImGui::SameLine();
+        std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
+        help_marker_mpv += "Use at your own risk, not every command will work as you expect";
+        HelpMarker(help_marker_mpv.c_str());
+        
+
         ImGui::End();
     }
 
@@ -185,7 +209,7 @@ void construct_interface(SDL_Window *window)
 */
         if (ImGui::Button("Play/Pause"))
         {
-            mpv_play_pause();
+            mpv_toggle_pause();
         }
 
         ImGui::SameLine(0, 10);

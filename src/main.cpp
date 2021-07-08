@@ -161,25 +161,28 @@ int main(int argc, char *argv[])
 
             if (event.type == SDL_KEYDOWN)
             {
-                if (event.key.keysym.sym == SDLK_SPACE) {
-                    mpv_play_pause();
-                }
+                if (!ImGui::GetIO().WantCaptureKeyboard)
+                {
+                    if (event.key.keysym.sym == SDLK_SPACE) {
+                        mpv_toggle_pause();
+                    }
 
-                if (event.key.keysym.sym == SDLK_f) {
-                    toggle_fullscreen(window);
-                }
+                    if (event.key.keysym.sym == SDLK_f) {
+                        toggle_fullscreen(window);
+                    }
 
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    SDL_SetWindowFullscreen(window, 0);
-                    set_fullscreen(false);
-                }
+                    if (event.key.keysym.sym == SDLK_ESCAPE) {
+                        SDL_SetWindowFullscreen(window, 0);
+                        set_fullscreen(false);
+                    }
 
-                if (event.key.keysym.sym == SDLK_RIGHT) {
-                    mpv_seek("10", "relative");
-                }
+                    if (event.key.keysym.sym == SDLK_RIGHT) {
+                        mpv_seek("10", "relative");
+                    }
 
-                if (event.key.keysym.sym == SDLK_LEFT) {
-                    mpv_seek("-10", "relative");
+                    if (event.key.keysym.sym == SDLK_LEFT) {
+                        mpv_seek("-10", "relative");
+                    }
                 }
             }
 

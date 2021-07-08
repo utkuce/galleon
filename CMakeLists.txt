@@ -6,10 +6,9 @@ project (syncwatchUI)
 set(CMAKE_CXX_STANDARD 11)
 
 # source files for the main executable
-file(GLOB MY_SOURCES "src/*.cpp")
+file(GLOB MY_SOURCES "src/*.cpp" "src/*.c")
 file(GLOB IMGUI_SOURCES "src/imgui/*.cpp")
-file(GLOB MPV_SOURCES "src/video_player.c")
-add_executable(syncwatchUI ${MY_SOURCES} ${IMGUI_SOURCES} ${MPV_SOURCES})
+add_executable(syncwatchUI ${MY_SOURCES} ${IMGUI_SOURCES})
 
 
 # link opengl libs
@@ -31,6 +30,14 @@ add_definitions(-DSDL_MAIN_HANDLED)
 
 # link mpv libraries
 target_link_libraries(syncwatchUI mpv)
+
+# include youtube-dl.exe on windows
+if (WIN32)
+    install(FILES "youtube-dl.exe" DESTINATION .)
+endif()
+# TODO: on linux package dependency to youtube-dl
+
+#install(TARGETS syncwatchUI RUNTIME_DEPENDENCIES DESTINATION .)
 
 include(InstallRequiredSystemLibraries)
 include(CPack)

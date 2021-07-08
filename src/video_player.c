@@ -121,56 +121,8 @@ void mpv_events(SDL_Event event)
 
             if (mp_event->event_id == MPV_EVENT_NONE)
                 break;
-/*
-            if (mp_event->event_id == MPV_EVENT_LOG_MESSAGE) {
-                mpv_event_log_message *msg = mp_event->data;
-                // Print log messages about DR allocations, just to
-                // test whether it works. If there is more than 1 of
-                // these, it works. (The log message can actually change
-                // any time, so it's possible this logging stops working
-                // in the future.)
-                if (strstr(msg->text, "DR image"))
-                    printf("log: %s", msg->text);
-                continue;
-            }*/
 
-            if (mp_event->event_id == MPV_EVENT_PROPERTY_CHANGE) {
-
-                mpv_event_property* prop = mp_event->data;
-
-                if (strcmp(prop->name,"duration") == 0) {
-                    duration = *(int*)(prop->data); 
-                    //printf("property change: %s, %d\n", prop->name, duration);
-                }
-
-                if (strcmp(prop->name,"playback-time") == 0) {
-                    position = *(int*)(prop->data); 
-                    //printf("property change: %s, %d\n", prop->name, position);
-                }
-            }
-
-            if (mp_event->event_id == MPV_EVENT_CLIENT_MESSAGE) {
-                
-                mpv_event_client_message* message = mp_event->data;
-
-                if (strcmp(message->args[0],"torrentInfo") == 0)
-                    set_torrent_info(message->args);
-                
-                if (strcmp(message->args[0],"roomLink") == 0)
-                    set_room_link(message->args[1]);
-
-                if (strcmp(message->args[0],"newPeer") == 0)
-                    set_new_peer(message->args[1]);
-                
-            }
-
-            const char* event_name = mpv_event_name(mp_event->event_id);
-            //printf("event: %s\n", event_name);
-
-            if (strcmp(event_name, "file-loaded") == 0)
-            {
-                loaded_video = 1;
-            }
+            video_event(mp_event);
         }
     }
 }
@@ -203,8 +155,7 @@ void mpv_redraw(SDL_Window *window)
     }
 }
 
-
-void mpv_play_pause()
+void mpv_toggle_pause()
 {
     const char *cmd_pause[] = {"cycle", "pause", NULL};
     mpv_command_async(mpv, 0, cmd_pause);

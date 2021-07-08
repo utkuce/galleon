@@ -23,13 +23,15 @@ void mpv_redraw(SDL_Window *window);
 
 void mpv_input();
 
-void mpv_play_pause();
+void mpv_toggle_pause();
 void mpv_seek(const char*, const char*);
 extern int position, duration;
 
 void set_room_link(const char*);
 void set_torrent_info(const char**);
 void set_new_peer(const char*);
+
+void video_event(mpv_event *);
 
 // events
 extern int loaded_video;

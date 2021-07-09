@@ -34,7 +34,12 @@ void set_new_peer(const char*);
 void video_event(mpv_event *);
 
 // events
-extern int loaded_video;
+
+namespace videoevent {
+    extern bool loaded_video;
+    extern bool paused;
+}
+
 
 #ifdef __cplusplus
 }

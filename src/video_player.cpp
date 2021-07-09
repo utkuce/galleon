@@ -36,7 +36,6 @@ mpv_handle *mpv;
 mpv_render_context *mpv_gl;
 int redraw;
 int position, duration;
-int loaded_video;
 
 void initialize_mpv()
 {
@@ -54,11 +53,15 @@ void initialize_mpv()
 
     mpv_request_log_messages(mpv, "debug");
 
+    mpv_opengl_init_params opengl_params{
+        .get_proc_address = get_proc_address_mpv
+    };
+
+    int advanced_control = 1;
+
     mpv_render_param params[] = {
-        {MPV_RENDER_PARAM_API_TYPE, MPV_RENDER_API_TYPE_OPENGL},
-        {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &(mpv_opengl_init_params){
-            .get_proc_address = get_proc_address_mpv,
-        }},
+        {MPV_RENDER_PARAM_API_TYPE, (void*)MPV_RENDER_API_TYPE_OPENGL},
+        {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &opengl_params},
         // Tell libmpv that you will call mpv_render_context_update() on render
         // context update callbacks, and that you will _not_ block on the core
         // ever (see <libmpv/render.h> "Threading" section for what libmpv
@@ -68,8 +71,8 @@ void initialize_mpv()
         // If you want to use synchronous calls, either make them on a separate
         // thread, or remove the option below (this will disable features like
         // DR and is not recommended anyway).
-        {MPV_RENDER_PARAM_ADVANCED_CONTROL, &(int){1}},
-        {0}
+        {MPV_RENDER_PARAM_ADVANCED_CONTROL, &advanced_control},
+        {mpv_render_param{}}
     };
 
     // This makes mpv use the currently set GL context. It will use the callback
@@ -133,19 +136,24 @@ void mpv_redraw(SDL_Window *window)
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
+
+        mpv_opengl_fbo opengl_fbo{
+            .fbo = 0,
+            .w = w,
+            .h = h,
+        };
+
+        int flip_y = 1;
+
         mpv_render_param params[] = {
             // Specify the default framebuffer (0) as target. This will
             // render onto the entire screen. If you want to show the video
             // in a smaller rectangle or apply fancy transformations, you'll
             // need to render into a separate FBO and draw it manually.
-            {MPV_RENDER_PARAM_OPENGL_FBO, &(mpv_opengl_fbo){
-                .fbo = 0,
-                .w = w,
-                .h = h,
-            }},
+            {MPV_RENDER_PARAM_OPENGL_FBO, &opengl_fbo},
             // Flip rendering (needed due to flipped GL coordinate system).
-            {MPV_RENDER_PARAM_FLIP_Y, &(int){1}},
-            {0}
+            {MPV_RENDER_PARAM_FLIP_Y, &flip_y},
+            {mpv_render_param_type{}}
         };
 
         // See render_gl.h on what OpenGL environment mpv expects, and

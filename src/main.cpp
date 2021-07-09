@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
+    interface::init(window);
+
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
     bool err = gl3wInit() != 0;
@@ -133,8 +135,10 @@ int main(int argc, char *argv[])
         mpv_command_async(mpv, 0, cmd);
     }
 
-    mpv_observe_property(mpv, 0,"duration", MPV_FORMAT_INT64);
-    mpv_observe_property(mpv, 0,"playback-time", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "playback-time", MPV_FORMAT_INT64);
+    mpv_observe_property(mpv, 0, "media-title", MPV_FORMAT_STRING);
+    mpv_observe_property(mpv, 0, "pause", MPV_FORMAT_FLAG);
 
 
     // Main loop
@@ -168,12 +172,12 @@ int main(int argc, char *argv[])
                     }
 
                     if (event.key.keysym.sym == SDLK_f) {
-                        toggle_fullscreen(window);
+                        interface::toggle_fullscreen();
                     }
 
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         SDL_SetWindowFullscreen(window, 0);
-                        set_fullscreen(false);
+                        interface::set_fullscreen(false);
                     }
 
                     if (event.key.keysym.sym == SDLK_RIGHT) {
@@ -187,7 +191,7 @@ int main(int argc, char *argv[])
             }
 
             if (event.type == SDL_MOUSEMOTION) {
-                set_last_mouse_motion(event.motion.timestamp);
+                interface::set_last_mouse_motion(event.motion.timestamp);
                 //std::cout << "Mouse moting event: " << last_mouse_motion << std::endl;
             }
 
@@ -208,9 +212,7 @@ int main(int argc, char *argv[])
         style.ItemSpacing = ImVec2(8,12);
         style.FramePadding = ImVec2(14,3);
 
-        
-
-        construct_interface(window);
+        interface::draw();
 
         // Rendering
         ImGui::Render();

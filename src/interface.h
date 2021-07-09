@@ -4,10 +4,17 @@
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
 
-void init_interface();
-void construct_interface(SDL_Window*);
-void toggle_fullscreen(SDL_Window*);
-void set_fullscreen(bool);
-void set_last_mouse_motion(int);
+namespace interface 
+{
+    void init(SDL_Window*);
+    void draw();
+    void toggle_fullscreen();
+    void set_fullscreen(bool);
+    void set_last_mouse_motion(int);
+    void set_media_title(char*);
+
+    extern SDL_Window* sdl_window;
+}
 
 #endif
+

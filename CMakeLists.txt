@@ -6,7 +6,7 @@ project (syncwatchUI)
 set(CMAKE_CXX_STANDARD 11)
 
 # source files for the main executable
-file(GLOB MY_SOURCES "src/*.cpp" "src/*.c")
+file(GLOB MY_SOURCES "src/*.cpp")
 file(GLOB IMGUI_SOURCES "src/imgui/*.cpp")
 add_executable(syncwatchUI ${MY_SOURCES} ${IMGUI_SOURCES})
 

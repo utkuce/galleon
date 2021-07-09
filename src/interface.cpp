@@ -6,6 +6,7 @@
 #include "video_player.h"
 //#include "util.h"
 
+SDL_Window* interface::sdl_window;
 int margin = 40;
 bool show_info_panel = true;
 
@@ -16,9 +17,14 @@ bool show_interface;
 bool loading_source = false;
 bool fullscreen = false;
 
-void toggle_fullscreen(SDL_Window* window)
+void interface::init(SDL_Window* window)
 {
-    SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    sdl_window = window;
+}
+
+void interface::toggle_fullscreen()
+{
+    SDL_SetWindowFullscreen(sdl_window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
     fullscreen = !fullscreen;
 }
 
@@ -76,12 +82,12 @@ void set_torrent_info(const char** torrent_info)
     torrent_peers = torrent_info[5];
 }
 
-void construct_interface(SDL_Window *window)
+void interface::draw()
 {
-    
     show_interface = ImGui::GetIO().WantCaptureMouse || 
                      ImGui::GetIO().WantCaptureKeyboard ||
-                     SDL_GetTicks() - last_mouse_motion < 2000;
+                     SDL_GetTicks() - last_mouse_motion < 2000 ||
+                     videoevent::paused;
 
     //ImGui::ShowDemoWindow();
     SDL_ShowCursor(show_interface);
@@ -114,7 +120,7 @@ void construct_interface(SDL_Window *window)
         {
             ImGui::OpenPopup("loading video");
             loading_source = false;
-            loaded_video = 0;
+            videoevent::loaded_video = false;
         }
 
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | 
@@ -126,26 +132,24 @@ void construct_interface(SDL_Window *window)
             
             ImGui::Text("Loading video...");
             
-            if (loaded_video == 1)
+            if (videoevent::loaded_video)
             {
-                loaded_video = 0;
+                videoevent::loaded_video = false;
                 ImGui::CloseCurrentPopup();
 
-                const char *cmd[] = {"set", "pause", "true", NULL};
+                const char *cmd[] = {"set", "pause", "yes", NULL};
                 mpv_command_async(mpv, 0, cmd);
-
-                
             }
 
             ImGui::EndPopup();
         }
 
-        /*
+        
         ImGui::SameLine();
-        std::string help_marker = "Enter a magnet link or a video url (youtube etc.)\n";
+        std::string help_marker = ""; //"Enter a magnet link or a video url (youtube etc.)\n";
         help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
         HelpMarker(help_marker.c_str());
-        */
+        
 
         static char str2[1024] = "";
         ImGui::InputTextWithHint("##mpvcmd", "mpv command"/*"Enter magnet link or url"*/, str2, IM_ARRAYSIZE(str2));
@@ -156,7 +160,8 @@ void construct_interface(SDL_Window *window)
         
         ImGui::SameLine();
         std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
-        help_marker_mpv += "Use at your own risk, not every command will work as you expect";
+        help_marker_mpv += "Use at your own risk, not every command will work as you expect\n";
+        help_marker_mpv += "Example:\nset sid 4\nwill select the 4th subtitle track";
         HelpMarker(help_marker_mpv.c_str());
         
 
@@ -166,7 +171,7 @@ void construct_interface(SDL_Window *window)
     if (show_interface)
     {
         int width, height;
-        SDL_GetWindowSize(window, &width, &height);
+        SDL_GetWindowSize(sdl_window, &width, &height);
         ImGui::SetNextWindowSize(ImVec2(width - margin * 2, 0));
         ImGui::SetNextWindowPos(ImVec2(margin, height - ImGui::GetTextLineHeightWithSpacing() * 2 - margin));
 
@@ -189,11 +194,6 @@ void construct_interface(SDL_Window *window)
             if (ImGui::IsItemDeactivatedAfterEdit)
                 slider_position = position;
         }
-/*
-        ImGui::SetNextItemWidth(100);
-        if (ImGui::SliderInt("Volume", &volume, 0, 100))
-        {
-        }
 
         if (ImGui::Button("Play/Pause"))
         {
@@ -203,7 +203,7 @@ void construct_interface(SDL_Window *window)
         ImGui::SameLine(0, 10);
         if (ImGui::Button("Fullscreen"))
         {
-            toggle_fullscreen(window);
+            toggle_fullscreen();
         }
 
         ImGui::SameLine(0, 10);
@@ -240,12 +240,17 @@ void construct_interface(SDL_Window *window)
     }
 }
 
-void set_fullscreen(bool value)
+void interface::set_media_title(char* title)
+{
+    SDL_SetWindowTitle(sdl_window, title);
+}
+
+void interface::set_fullscreen(bool value)
 {
     fullscreen = value;
 }
 
-void set_last_mouse_motion(int timestamp)
+void interface::set_last_mouse_motion(int timestamp)
 {
     last_mouse_motion = timestamp;
 }

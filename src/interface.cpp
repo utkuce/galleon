@@ -112,18 +112,28 @@ void interface::draw()
 
             //ImGui::Text("Video source");
 
-            static char str1[1024] = "";
-            ImGui::InputTextWithHint("##vidsrc", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
-            ImGui::SameLine();
-            if (ImGui::Button("Stream"))
-            {
-                // send to parent process
-                std::cout << "source input:" << str1 << std::endl;
+            auto video_input = [](char* source) 
+            { 
+                std::cout << "source input:" << source << std::endl;
 
-                const char *cmd[] = {"loadfile", str1, NULL};
+                const char *cmd[] = {"loadfile", source, NULL};
                 mpv_command_async(mpv, 0, cmd);
 
                 loading_source = true;
+            };
+
+            static char str1[1024] = "";
+            if (ImGui::InputTextWithHint("##vidsrc", "Video Source", str1, 
+                IM_ARRAYSIZE(str1), 
+                ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                video_input(str1);
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Stream"))
+            {
+                video_input(str1);
             }
 
             if (loading_source == true) 
@@ -150,19 +160,24 @@ void interface::draw()
 
                 ImGui::EndPopup();
             }
-
             
             ImGui::SameLine();
             std::string help_marker = ""; //"Enter a magnet link or a video url (youtube etc.)\n";
-            help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
+            help_marker += "A complete list of supported sources can be found on";
+            help_marker += "\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
             HelpMarker(help_marker.c_str());
             
-
             static char str2[1024] = "";
-            ImGui::InputTextWithHint("##mpvcmd", "mpv command"/*"Enter magnet link or url"*/, str2, IM_ARRAYSIZE(str2));
+            if (ImGui::InputTextWithHint("##mpvcmd", "mpv command", str2, IM_ARRAYSIZE(str2), 
+                ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                mpv_command_string(mpv, str2);
+            }
             ImGui::SameLine();
             if (ImGui::Button("Run"))
+            {
                 mpv_command_string(mpv, str2);
+            }    
 
             
             ImGui::SameLine();

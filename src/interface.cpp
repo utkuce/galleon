@@ -20,6 +20,9 @@ bool fullscreen = false;
 void interface::init(SDL_Window* window)
 {
     sdl_window = window;
+
+    //const char *cmd_keep[] = {"set", "keep-open", "yes", NULL};
+    //mpv_command_async(mpv, 0, cmd_keep); // TODO: Fix segfault because of this
 }
 
 void interface::toggle_fullscreen()
@@ -92,86 +95,87 @@ void interface::draw()
     //ImGui::ShowDemoWindow();
     SDL_ShowCursor(show_interface);
 
-    if (show_info_panel && show_interface)
-    {
-        ImGui::SetNextWindowPos(ImVec2(margin, margin));
-        ImGui::SetNextItemWidth(350);
-        ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | 
-                                 ImGuiWindowFlags_AlwaysAutoResize | 
-                                 ImGuiWindowFlags_NoTitleBar);
-
-        //ImGui::Text("Video source");
-
-        static char str1[1024] = "";
-        ImGui::InputTextWithHint("##vidsrc", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
-        ImGui::SameLine();
-        if (ImGui::Button("Stream"))
-        {
-            // send to parent process
-            std::cout << "source input:" << str1 << std::endl;
-
-            const char *cmd[] = {"loadfile", str1, NULL};
-            mpv_command_async(mpv, 0, cmd);
-
-            loading_source = true;
-        }
-
-        if (loading_source == true) 
-        {
-            ImGui::OpenPopup("loading video");
-            loading_source = false;
-            videoevent::loaded_video = false;
-        }
-
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | 
-                                 ImGuiWindowFlags_AlwaysAutoResize | 
-                                 ImGuiWindowFlags_NoTitleBar | 
-                                 ImGuiWindowFlags_NoMove;
-
-        if (ImGui::BeginPopupModal("loading video", nullptr, flags)){
-            
-            ImGui::Text("Loading video...");
-            
-            if (videoevent::loaded_video)
-            {
-                videoevent::loaded_video = false;
-                ImGui::CloseCurrentPopup();
-
-                const char *cmd[] = {"set", "pause", "yes", NULL};
-                mpv_command_async(mpv, 0, cmd);
-            }
-
-            ImGui::EndPopup();
-        }
-
-        
-        ImGui::SameLine();
-        std::string help_marker = ""; //"Enter a magnet link or a video url (youtube etc.)\n";
-        help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
-        HelpMarker(help_marker.c_str());
-        
-
-        static char str2[1024] = "";
-        ImGui::InputTextWithHint("##mpvcmd", "mpv command"/*"Enter magnet link or url"*/, str2, IM_ARRAYSIZE(str2));
-        ImGui::SameLine();
-        if (ImGui::Button("Run"))
-            mpv_command_string(mpv, str2);
-
-        
-        ImGui::SameLine();
-        std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
-        help_marker_mpv += "Use at your own risk, not every command will work as you expect\n";
-        help_marker_mpv += "Example:\nset sid 4\nwill select the 4th subtitle track";
-        HelpMarker(help_marker_mpv.c_str());
-        
-
-        ImGui::End();
-    }
-
     if (show_interface)
     {
         int width, height;
         SDL_GetWindowSize(sdl_window, &width, &height);
+
+        if (show_info_panel)
+        {
+            int next_window_width = 350;
+            ImGui::SetNextWindowPos(ImVec2(width - (margin + next_window_width), margin));
+            ImGui::SetNextWindowSize(ImVec2(next_window_width, ImGui::GetTextLineHeightWithSpacing() * 3));
+            ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | 
+                                     ImGuiWindowFlags_AlwaysAutoResize | 
+                                     ImGuiWindowFlags_NoTitleBar);
+
+
+            //ImGui::Text("Video source");
+
+            static char str1[1024] = "";
+            ImGui::InputTextWithHint("##vidsrc", "Video Source"/*"Enter magnet link or url"*/, str1, IM_ARRAYSIZE(str1));
+            ImGui::SameLine();
+            if (ImGui::Button("Stream"))
+            {
+                // send to parent process
+                std::cout << "source input:" << str1 << std::endl;
+
+                const char *cmd[] = {"loadfile", str1, NULL};
+                mpv_command_async(mpv, 0, cmd);
+
+                loading_source = true;
+            }
+
+            if (loading_source == true) 
+            {
+                ImGui::OpenPopup("loading video");
+                loading_source = false;
+                videoevent::loaded_video = false;
+            }
+
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | 
+                                    ImGuiWindowFlags_AlwaysAutoResize | 
+                                    ImGuiWindowFlags_NoTitleBar | 
+                                    ImGuiWindowFlags_NoMove;
+
+            if (ImGui::BeginPopupModal("loading video", nullptr, flags)){
+                
+                ImGui::Text("Loading video...");
+                
+                if (videoevent::loaded_video)
+                {
+                    videoevent::loaded_video = false;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            
+            ImGui::SameLine();
+            std::string help_marker = ""; //"Enter a magnet link or a video url (youtube etc.)\n";
+            help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
+            HelpMarker(help_marker.c_str());
+            
+
+            static char str2[1024] = "";
+            ImGui::InputTextWithHint("##mpvcmd", "mpv command"/*"Enter magnet link or url"*/, str2, IM_ARRAYSIZE(str2));
+            ImGui::SameLine();
+            if (ImGui::Button("Run"))
+                mpv_command_string(mpv, str2);
+
+            
+            ImGui::SameLine();
+            std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
+            help_marker_mpv += "Use at your own risk, not every command will work as you expect\n";
+            help_marker_mpv += "Example:\nset sid 4\nwill select the 4th subtitle track";
+            HelpMarker(help_marker_mpv.c_str());
+            
+
+            ImGui::End();
+        }
+
+        // media controls
         ImGui::SetNextWindowSize(ImVec2(width - margin * 2, 0));
         ImGui::SetNextWindowPos(ImVec2(margin, height - ImGui::GetTextLineHeightWithSpacing() * 2 - margin));
 

@@ -10,6 +10,8 @@ int player_ready = 0;
 bool videoevent::paused;
 bool videoevent::loaded_video = false;
 std::string default_video = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+static int seeking = 0;
+std::vector<char*> interface::subtitle_list;
 
 void video_event(mpv_event *mp_event)
 {
@@ -27,8 +29,10 @@ void video_event(mpv_event *mp_event)
         if (strcmp(prop->name, "playback-time") == 0)
         {
             position = *(int *)(prop->data);
-            //std::cout << "property change: " << prop->name << 
-            //    " value: " << position << std::endl;
+            
+            if (seeking)
+                std::cout << "property change: " << prop->name << 
+                    " value: " << position << std::endl;
         }
 
         if (strcmp(prop->name, "media-title") == 0)
@@ -38,6 +42,9 @@ void video_event(mpv_event *mp_event)
                 " value: " << media_title << std::endl;
 
             interface::set_media_title(media_title);
+
+            const char *cmd[] = {"set", "pause", "yes", NULL};
+            mpv_command_async(mpv, 0, cmd);
         }
 
         if (strcmp(prop->name, "pause") == 0)
@@ -45,6 +52,39 @@ void video_event(mpv_event *mp_event)
             videoevent::paused = *(int *)(prop->data);
             std::cout << "property change: " << prop->name << 
                 " value: " << videoevent::paused << std::endl;
+        }
+
+        if (strcmp(prop->name, "seeking") == 0)
+        {
+            seeking = *(int *)(prop->data);
+            std::cout << "property change: " << prop->name << 
+                " value: " << seeking << std::endl;
+        }
+
+        if (strcmp(prop->name, "track-list") == 0)
+        {
+            mpv_node node = *(mpv_node *)(prop->data);
+            mpv_node_list* tracks = node.u.list;
+            int number_of_tracks = tracks->num;
+
+            //std::cout << "Number of tracks: " << number_of_tracks << std::endl; 
+
+            for (int i = 0; i < number_of_tracks; i++)
+            {
+                auto track_properties = tracks->values[i].u.list;
+                char* track_type = track_properties->values[1].u.string;
+                //std::cout << "Track type: " << track_type << std::endl;
+
+                if (strcmp(track_type, "sub") == 0)
+                {
+                    int sid = track_properties->values[0].u.int64;
+                    char* subtitle_title = track_properties->values[3].u.string;
+                    
+                    interface::subtitle_list.push_back(subtitle_title);
+                    //std::cout << "sid: " << sid << " title: " <<  subtitle_title << std::endl;
+                }
+
+            }
         }
     }
 

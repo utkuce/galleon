@@ -20,6 +20,7 @@ bool fullscreen = false;
 void interface::init(SDL_Window* window)
 {
     sdl_window = window;
+    subtitle_list.push_back("None");
 
     //const char *cmd_keep[] = {"set", "keep-open", "yes", NULL};
     //mpv_command_async(mpv, 0, cmd_keep); // TODO: Fix segfault because of this
@@ -182,7 +183,7 @@ void interface::draw()
             
             ImGui::SameLine();
             std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
-            help_marker_mpv += "Use at your own risk, not every command will work as you expect\n";
+            help_marker_mpv += "Use at your own risk, not every command might work as you expect\n";
             help_marker_mpv += "Example:\nset sid 4\nwill select the 4th subtitle track";
             HelpMarker(help_marker_mpv.c_str());
             
@@ -239,13 +240,17 @@ void interface::draw()
             mpv_command_async(mpv, 0, cmd_volume);
         }
 
-        /*
+
         ImGui::SameLine(0, 10);
         ImGui::SetNextItemWidth(150);
-        static int subtitle_selection = 0;
-        ImGui::Combo("Subtitles", &subtitle_selection, "None\0Subtitle1\0Subtitle2\0\0", 10);
+        static int subtitle_selection = 0;        
+        if (ImGui::Combo("Subtitles", &subtitle_selection, &subtitle_list[0], subtitle_list.size()))
+        {
+            const char *cmd_sub[] = {"set", "sid", std::to_string(subtitle_selection).c_str(), NULL};
+            mpv_command_async(mpv, 0, cmd_sub);
+        }
 
-        
+        /*
         ImGui::SameLine(0, 10);
         static bool mute;
         if (ImGui::Checkbox("Mute", &mute))

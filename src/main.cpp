@@ -139,7 +139,8 @@ int main(int argc, char *argv[])
     mpv_observe_property(mpv, 0, "playback-time", MPV_FORMAT_INT64);
     mpv_observe_property(mpv, 0, "media-title", MPV_FORMAT_STRING);
     mpv_observe_property(mpv, 0, "pause", MPV_FORMAT_FLAG);
-
+    mpv_observe_property(mpv, 0, "seeking", MPV_FORMAT_FLAG);
+    mpv_observe_property(mpv, 0, "track-list", MPV_FORMAT_NODE);
 
     // Main loop
     bool done = false;

@@ -9,6 +9,7 @@
     ```
 - Update imgui submodule with `git submodule update`
 - Optionally download [youtube-dl](https://youtube-dl.org/) and place the exe in the root directory of the project
+- Run `./build-msys2.sh`
 
 # Screenshot
 

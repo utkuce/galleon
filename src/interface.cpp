@@ -20,7 +20,7 @@ bool fullscreen = false;
 void interface::init(SDL_Window* window)
 {
     sdl_window = window;
-    subtitle_list.push_back("None");
+    subtitle_list.push_back((char *)"None");
 
     //const char *cmd_keep[] = {"set", "keep-open", "yes", NULL};
     //mpv_command_async(mpv, 0, cmd_keep); // TODO: Fix segfault because of this

@@ -5,7 +5,7 @@
 #include <fmt/core.h>
 
 #include "video_player.h"
-#include "interface.h"
+#include "../interface/interface.h"
 
 int player_ready = 0;
 bool videoevent::paused;

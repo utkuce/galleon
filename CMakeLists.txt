@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_BUILD_TYPE Debug)
 
 # source files for the main executable
-file(GLOB MY_SOURCES "src/*.cpp")
+file(GLOB MY_SOURCES "src/*.cpp" "src/*/*.cpp")
 file(GLOB IMGUI_SOURCES "src/imgui/*.cpp")
 add_executable(syncwatchUI ${MY_SOURCES} ${IMGUI_SOURCES})
 

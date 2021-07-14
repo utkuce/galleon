@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "video_player.h"
+#include "../video/video_player.h"
 //#include "util.h"
 
 SDL_Window* interface::sdl_window;

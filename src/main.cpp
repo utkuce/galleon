@@ -4,8 +4,8 @@
 // (GL3W is a helper library to access OpenGL functions since there is no standard header to access modern OpenGL functions easily. Alternatives are GLEW, Glad, etc.)
 
 #include "imgui/imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui_impl/imgui_impl_sdl.h"
+#include "imgui_impl/imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
@@ -29,8 +29,8 @@
 #include <iostream>
 #include <string>
 #include <iostream>
-#include "interface.h"
-#include "video_player.h"
+#include "interface/interface.h"
+#include "video/video_player.h"
 
 // Main code
 int main(int argc, char *argv[])

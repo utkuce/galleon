@@ -4,6 +4,7 @@ cmake_policy(SET CMP0074 NEW)
 project (syncwatchUI)
 
 set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_BUILD_TYPE Debug)
 
 # source files for the main executable
 file(GLOB MY_SOURCES "src/*.cpp")
@@ -35,9 +36,11 @@ target_link_libraries(syncwatchUI mpv)
 if (WIN32)
     install(FILES "youtube-dl.exe" DESTINATION .)
 endif()
-# TODO: on linux package dependency to youtube-dl
+# TODO: on linux optional package dependency to youtube-dl
+
+target_link_libraries(syncwatchUI fmt)
+
 
 #install(TARGETS syncwatchUI RUNTIME_DEPENDENCIES DESTINATION .)
-
-include(InstallRequiredSystemLibraries)
-include(CPack)
+#include(InstallRequiredSystemLibraries)
+#include(CPack)

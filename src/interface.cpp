@@ -20,7 +20,7 @@ bool fullscreen = false;
 void interface::init(SDL_Window* window)
 {
     sdl_window = window;
-    subtitle_list.push_back((char *)"None");
+    subtitle_list[0] = "None";
 
     //const char *cmd_keep[] = {"set", "keep-open", "yes", NULL};
     //mpv_command_async(mpv, 0, cmd_keep); // TODO: Fix segfault because of this
@@ -227,14 +227,18 @@ void interface::draw()
         }
 
         ImGui::SameLine(0, 10);
-        ImGui::Checkbox("Show Info Panel", &show_info_panel);
+        ImGui::Text("Show Info Panel");
+        ImGui::SameLine();
+        ImGui::Checkbox("##Show Info Panel", &show_info_panel);
         //ImGui::SameLine(0, 10);
         //ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 
         ImGui::SameLine(0, 10);
+        ImGui::Text("Volume");
+        ImGui::SameLine();
         ImGui::SetNextItemWidth(100);
         static int volume = 100.0f;
-        if (ImGui::SliderInt("Volume", &volume, 0, 100))
+        if (ImGui::SliderInt("##Volume", &volume, 0, 100))
         {
             const char *cmd_volume[] = {"set", "volume", std::to_string(volume).c_str(), NULL};
             mpv_command_async(mpv, 0, cmd_volume);
@@ -244,10 +248,26 @@ void interface::draw()
         ImGui::SameLine(0, 10);
         ImGui::SetNextItemWidth(150);
         static int subtitle_selection = 0;        
-        if (ImGui::Combo("Subtitles", &subtitle_selection, &subtitle_list[0], subtitle_list.size()))
+        
+        if (ImGui::BeginCombo("##subs", "Subtitles"))
         {
-            const char *cmd_sub[] = {"set", "sid", std::to_string(subtitle_selection).c_str(), NULL};
-            mpv_command_async(mpv, 0, cmd_sub);
+            std::map<int, std::string>::iterator it;
+            for (it = subtitle_list.begin(); it != subtitle_list.end(); it++)
+            {
+                const bool is_selected = (subtitle_selection == it->first);
+                if (ImGui::Selectable(subtitle_list[it->first].c_str(), is_selected))
+                {
+                    subtitle_selection = it->first;
+                    ImGui::SetItemDefaultFocus();
+
+                    std::cout << "Selected subtitle track " << subtitle_selection << std::endl;
+                    const char *cmd_sub[] = {"set", "sid", std::to_string(subtitle_selection).c_str(), NULL};
+                    mpv_command_async(mpv, 0, cmd_sub);
+
+                }
+            }
+
+            ImGui::EndCombo();
         }
 
         /*

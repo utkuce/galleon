@@ -3,7 +3,8 @@
 
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
-#include <vector>
+#include <map>
+#include <string>
 
 struct subtitle {
   int sid;
@@ -20,8 +21,7 @@ namespace interface
     void set_media_title(char*);
 
     extern SDL_Window* sdl_window;
-    extern std::vector<char*> subtitle_list;
-
+    extern std::map<int, std::string> subtitle_list;
 }
 
 #endif

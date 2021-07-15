@@ -3,18 +3,17 @@
 #include <string>
 #include <vector>
 
-#include "../video/video_player.h"
-//#include "util.h"
-
 SDL_Window* interface::sdl_window;
-int margin = 40;
-bool show_info_panel = true;
 
-int slider_position;
+int interface::width, interface::height;
+int interface::margin = 40;
+
+bool interface::show_input_panel = true;
+
 int last_mouse_motion;
 bool show_interface;
 
-bool loading_source = false;
+
 bool fullscreen = false;
 
 void interface::init(SDL_Window* window)
@@ -30,37 +29,6 @@ void interface::toggle_fullscreen()
 {
     SDL_SetWindowFullscreen(sdl_window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
     fullscreen = !fullscreen;
-}
-
-void HelpMarker(const char* desc)
-{
-    ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
-
-const char* seconds_to_display(int input, char* output)
-{
-    input = input % (24 * 3600); 
-    int hours = input / 3600; 
-  
-    input %= 3600; 
-    int minutes = input / 60 ; 
-  
-    input %= 60; 
-    int seconds = input; 
-
-    if (hours != 0)
-        sprintf(output, "%02d:%02d:%02d", hours, minutes, seconds);
-    else
-        sprintf(output, "%02d:%02d", minutes, seconds);
-    return output;
 }
 
 std::string torrent_name;
@@ -98,189 +66,14 @@ void interface::draw()
 
     if (show_interface)
     {
-        int width, height;
         SDL_GetWindowSize(sdl_window, &width, &height);
 
-        if (show_info_panel)
+        if (show_input_panel)
         {
-            int next_window_width = 350;
-            ImGui::SetNextWindowPos(ImVec2(width - (margin + next_window_width), margin));
-            ImGui::SetNextWindowSize(ImVec2(next_window_width, ImGui::GetTextLineHeightWithSpacing() * 3));
-            ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | 
-                                     ImGuiWindowFlags_AlwaysAutoResize | 
-                                     ImGuiWindowFlags_NoTitleBar);
-
-
-            //ImGui::Text("Video source");
-
-            auto video_input = [](char* source) 
-            { 
-                std::cout << "source input:" << source << std::endl;
-
-                const char *cmd[] = {"loadfile", source, NULL};
-                mpv_command_async(mpv, 0, cmd);
-
-                loading_source = true;
-            };
-
-            static char str1[1024] = "";
-            if (ImGui::InputTextWithHint("##vidsrc", "Video Source", str1, 
-                IM_ARRAYSIZE(str1), 
-                ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                video_input(str1);
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Stream"))
-            {
-                video_input(str1);
-            }
-
-            if (loading_source == true) 
-            {
-                ImGui::OpenPopup("loading video");
-                loading_source = false;
-                videoevent::loaded_video = false;
-            }
-
-            ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | 
-                                    ImGuiWindowFlags_AlwaysAutoResize | 
-                                    ImGuiWindowFlags_NoTitleBar | 
-                                    ImGuiWindowFlags_NoMove;
-
-            if (ImGui::BeginPopupModal("loading video", nullptr, flags)){
-                
-                ImGui::Text("Loading video...");
-                
-                if (videoevent::loaded_video)
-                {
-                    videoevent::loaded_video = false;
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
-            
-            ImGui::SameLine();
-            std::string help_marker = ""; //"Enter a magnet link or a video url (youtube etc.)\n";
-            help_marker += "A complete list of supported sources can be found on";
-            help_marker += "\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
-            HelpMarker(help_marker.c_str());
-            
-            static char str2[1024] = "";
-            if (ImGui::InputTextWithHint("##mpvcmd", "mpv command", str2, IM_ARRAYSIZE(str2), 
-                ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                mpv_command_string(mpv, str2);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Run"))
-            {
-                mpv_command_string(mpv, str2);
-            }    
-
-            
-            ImGui::SameLine();
-            std::string help_marker_mpv = "https://mpv.io/manual/master/#list-of-input-commands\n";
-            help_marker_mpv += "Use at your own risk, not every command might work as you expect\n";
-            help_marker_mpv += "Example:\nset sid 4\nwill select the 4th subtitle track";
-            HelpMarker(help_marker_mpv.c_str());
-            
-
-            ImGui::End();
+            draw_input_panel();
         }
 
-        // media controls
-        ImGui::SetNextWindowSize(ImVec2(width - margin * 2, 0));
-        ImGui::SetNextWindowPos(ImVec2(margin, height - ImGui::GetTextLineHeightWithSpacing() * 2 - margin));
-
-        ImGui::Begin("Media Controls", 0, ImGuiWindowFlags_NoTitleBar);
-
-        char slider_display[99], position_display[99], duration_display[99];
-        seconds_to_display(position, position_display);
-        seconds_to_display(duration, duration_display);
-        sprintf(slider_display, "%s/%s", position_display, duration_display);
-
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (ImGui::SliderInt("", &slider_position, 0, duration, slider_display))
-        {
-            //std::cout << "Slider position: " << slider_position << std::endl;
-            const char *cmd_seek[] = {"seek", std::to_string(slider_position).c_str(), "absolute", NULL};
-            mpv_command_async(mpv, 0, cmd_seek);
-        }
-        else
-        {
-            if (ImGui::IsItemDeactivatedAfterEdit)
-                slider_position = position;
-        }
-
-        if (ImGui::Button("Play/Pause"))
-        {
-            mpv_toggle_pause();
-        }
-
-        ImGui::SameLine(0, 10);
-        if (ImGui::Button("Fullscreen"))
-        {
-            toggle_fullscreen();
-        }
-
-        ImGui::SameLine(0, 10);
-        ImGui::Text("Show Info Panel");
-        ImGui::SameLine();
-        ImGui::Checkbox("##Show Info Panel", &show_info_panel);
-        //ImGui::SameLine(0, 10);
-        //ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
-
-        ImGui::SameLine(0, 10);
-        ImGui::Text("Volume");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        static int volume = 100.0f;
-        if (ImGui::SliderInt("##Volume", &volume, 0, 100))
-        {
-            const char *cmd_volume[] = {"set", "volume", std::to_string(volume).c_str(), NULL};
-            mpv_command_async(mpv, 0, cmd_volume);
-        }
-
-
-        ImGui::SameLine(0, 10);
-        ImGui::SetNextItemWidth(150);
-        static int subtitle_selection = 0;        
-        
-        if (ImGui::BeginCombo("##subs", "Subtitles"))
-        {
-            std::map<int, std::string>::iterator it;
-            for (it = subtitle_list.begin(); it != subtitle_list.end(); it++)
-            {
-                const bool is_selected = (subtitle_selection == it->first);
-                if (ImGui::Selectable(subtitle_list[it->first].c_str(), is_selected))
-                {
-                    subtitle_selection = it->first;
-                    ImGui::SetItemDefaultFocus();
-
-                    std::cout << "Selected subtitle track " << subtitle_selection << std::endl;
-                    const char *cmd_sub[] = {"set", "sid", std::to_string(subtitle_selection).c_str(), NULL};
-                    mpv_command_async(mpv, 0, cmd_sub);
-
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-
-        /*
-        ImGui::SameLine(0, 10);
-        static bool mute;
-        if (ImGui::Checkbox("Mute", &mute))
-        {
-            const char *cmd_mute[] = {"set", "mute", mute ? "yes" : "no", NULL};
-            mpv_command_async(mpv, 0, cmd_mute);
-        }
-        */
-
-        ImGui::End();
+        draw_media_controls();
     }
 }
 

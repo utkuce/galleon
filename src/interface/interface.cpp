@@ -7,6 +7,7 @@ SDL_Window* interface::sdl_window;
 
 int interface::width, interface::height;
 int interface::margin = 40;
+int interface::panel_width = 350;
 
 bool interface::show_input_panel = true;
 
@@ -47,6 +48,7 @@ void interface::draw()
         if (show_input_panel)
         {
             draw_input_panel();
+            draw_torrent_info();
         }
 
         draw_media_controls();

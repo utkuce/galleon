@@ -5,8 +5,12 @@
 #include <stdlib.h>
 
 #include <SDL2/SDL.h>
+#include <string>
+#include <iostream>
 
 #include "video_player.h"
+#include "../torrent/torrent_handler.h"
+#include "../interface/interface.h"
 
 void die(const char *msg)
 {
@@ -173,4 +177,20 @@ void mpv_seek(const char* value, const char* type)
 {
     const char *seek[] = {"seek", value, type, NULL};
     mpv_command_async(mpv, 0, seek);
+}
+
+void set_video_source(const char* source)
+{
+    if (std::string(source).rfind("magnet:", 0) == 0) 
+    {
+        std::cout << "Received magnet link, forwarding to torrent handler" << std::endl;
+        torrent::add_magnet_link(source);
+    }
+    else
+    {
+        const char *cmd[] = {"loadfile", source, NULL};
+        mpv_command_async(mpv, 0, cmd);
+    }
+
+    interface::loading_source = true;
 }

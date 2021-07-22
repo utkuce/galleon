@@ -131,8 +131,7 @@ int main(int argc, char *argv[])
 
     if (argc == 2)
     {
-        const char *cmd[] = {"loadfile", argv[1], NULL};
-        mpv_command_async(mpv, 0, cmd);
+        set_video_source(argv[1]);
     }
 
     mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_INT64);

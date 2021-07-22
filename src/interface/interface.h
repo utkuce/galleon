@@ -27,12 +27,14 @@ namespace interface
 
     extern int width, height;
     extern int margin;
+    extern int panel_width;
 
     extern bool show_input_panel;
     extern bool loading_source;
 
     void draw_media_controls();
     void draw_input_panel();
+    void draw_torrent_info();
 }
 
 #endif

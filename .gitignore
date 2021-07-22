@@ -7,3 +7,4 @@ imgui.ini
 _CPack_Packages
 install_manifest.txt
 .vscode/settings.json
+.resume_file

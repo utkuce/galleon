@@ -7,6 +7,7 @@ extern "C" {
 
 #include <mpv/client.h>
 #include <mpv/render_gl.h>
+#include <SDL2/SDL.h>
 
 extern Uint32 wakeup_on_mpv_render_update, wakeup_on_mpv_events;
 
@@ -27,9 +28,7 @@ void mpv_toggle_pause();
 void mpv_seek(const char*, const char*);
 extern int position, duration;
 
-void set_room_link(const char*);
-void set_torrent_info(const char**);
-void set_new_peer(const char*);
+void set_video_source(const char*);
 
 void video_event(mpv_event *);
 

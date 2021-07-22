@@ -49,7 +49,7 @@ void interface::draw_media_controls()
     ImGui::SameLine(0, 10);
     ImGui::Text("Show Info Panel");
     ImGui::SameLine();
-    ImGui::Checkbox("##Show Info Panel", &show_input_panel);
+    ImGui::Checkbox("##Show Panels", &show_input_panel);
     //ImGui::SameLine(0, 10);
     //ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 

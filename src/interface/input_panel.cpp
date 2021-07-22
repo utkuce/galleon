@@ -1,5 +1,6 @@
 #include <iostream>
 #include "interface.h"
+#include "../torrent/torrent_handler.h"
 
 using namespace interface;
 
@@ -9,9 +10,8 @@ bool interface::loading_source = false;
 
 void interface::draw_input_panel()
 {
-    int next_window_width = 350;
-    ImGui::SetNextWindowPos(ImVec2(width - (margin + next_window_width), margin));
-    ImGui::SetNextWindowSize(ImVec2(next_window_width, ImGui::GetTextLineHeightWithSpacing() * 3));
+    ImGui::SetNextWindowPos(ImVec2(width - (margin + interface::panel_width), margin));
+    ImGui::SetNextWindowSize(ImVec2(interface::panel_width, ImGui::GetTextLineHeightWithSpacing() * 3));
     ImGui::Begin("Video", 0, ImGuiWindowFlags_NoCollapse | 
                              ImGuiWindowFlags_AlwaysAutoResize | 
                              ImGuiWindowFlags_NoTitleBar);
@@ -22,11 +22,7 @@ void interface::draw_input_panel()
     auto video_input = [](char* source) 
     { 
         std::cout << "source input:" << source << std::endl;
-
-        const char *cmd[] = {"loadfile", source, NULL};
-        mpv_command_async(mpv, 0, cmd);
-
-        loading_source = true;
+        set_video_source(source);
     };
 
     static char str1[1024] = "";

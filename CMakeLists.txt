@@ -1,9 +1,7 @@
 cmake_minimum_required (VERSION 3.2)
-cmake_policy(SET CMP0074 NEW)
-
 project (syncwatchUI)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_BUILD_TYPE Debug)
 
 # source files for the main executable
@@ -38,9 +36,16 @@ if (WIN32)
 endif()
 # TODO: on linux optional package dependency to youtube-dl
 
+# link fmt (fmt::format is used for string formatting)
 target_link_libraries(syncwatchUI fmt)
 
+# link libtorrent
+target_link_libraries(syncwatchUI torrent-rasterbar)
+if (WIN32)
+    target_link_libraries(syncwatchUI ws2_32)
+endif()
 
+# cpack
 #install(TARGETS syncwatchUI RUNTIME_DEPENDENCIES DESTINATION .)
 #include(InstallRequiredSystemLibraries)
 #include(CPack)

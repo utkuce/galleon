@@ -8,6 +8,7 @@
 #include <string>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
 
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
@@ -20,12 +21,37 @@
 #include <libtorrent/write_resume_data.hpp>
 #include <libtorrent/error_code.hpp>
 #include <libtorrent/magnet_uri.hpp>
+#include <libtorrent/torrent_flags.hpp>
 
 std::string torrent::name;
 float torrent::progress = 0.0f;
 std::string torrent::speed = "0 mb/s";
 std::string torrent::time = "-";
 int torrent::peers = 0;
+
+std::string video_path; //TODO: make vector of paths
+void set_video_path(lt::torrent_handle* h)
+{
+    auto files = h->torrent_file().get()->files();
+    int64_t largest_size = 0;
+
+    // TODO: add all video files in a queue
+    // let user select which ones to add
+    for (size_t i = 0; i < files.num_files(); i++)
+    {
+        int64_t size = files.file_size(i);
+        if (size > largest_size) // TODO: check if file is video
+        {
+            video_path = files.file_path(i);
+
+            std::stringstream stream;
+            stream << std::filesystem::path(video_path).filename();
+            torrent::name = stream.str();
+            
+            largest_size = size;
+        }
+    }
+}
 
 using clk = std::chrono::steady_clock;
 
@@ -104,7 +130,12 @@ void torrent_thread(const char *magnet_link)
             if (auto at = lt::alert_cast<lt::add_torrent_alert>(a))
             {
                 h = at->handle;
-                h.set_sequential_download(true);
+                h.set_flags(lt::torrent_flags::sequential_download);
+            }
+
+            if (auto at = lt::alert_cast<lt::metadata_received_alert>(a))
+            {
+
             }
 
             // if we receive the finished alert or an error, we're done
@@ -164,22 +195,7 @@ void torrent_thread(const char *magnet_link)
                 {
                     if (torrent::progress > .01f)
                     {
-                        auto files = h.get_torrent_info().files();
-                        int64_t largest_size = 0;
-                        std::string video_path;
-
-                        // TODO: add all video files in a queue
-                        // let user select which ones to add
-                        for (size_t i = 0; i < files.num_files(); i++)
-                        {
-                            int64_t size = files.at(i).size; 
-                            if (size > largest_size) // TODO: check if file is video
-                            {
-                                video_path = h.get_torrent_info().file_at(0).path;
-                                torrent::name = video_path;
-                                largest_size = size;
-                            }
-                        }
+                        set_video_path(&h);
 
                         if (!video_path.empty())
                         {   

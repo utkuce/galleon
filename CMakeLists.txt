@@ -7,45 +7,53 @@ set(CMAKE_CXX_STANDARD 17)
 # source files for the main executable
 file(GLOB MY_SOURCES "src/*.cpp" "src/*/*.cpp")
 file(GLOB IMGUI_SOURCES "src/imgui/*.cpp")
-add_executable(syncwatchUI ${MY_SOURCES} ${IMGUI_SOURCES})
+add_executable(${PROJECT_NAME} ${MY_SOURCES} ${IMGUI_SOURCES})
 
 
 # link opengl libs
 set (OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
-target_link_libraries(syncwatchUI ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
 
 if (WIN32)
 # Imm32 is required for imgui
 # mingw32 should be before SDL2main
-    target_link_libraries(syncwatchUI Imm32 mingw32 glew32)
+    target_link_libraries(${PROJECT_NAME} Imm32 mingw32 glew32)
 endif()
 
 # link sdl2 libraries
 find_package(SDL2 REQUIRED HINTS $ENV{SDL_DIR})
 include_directories(${SDL2_INCLUDE_DIRS})
-target_link_libraries(syncwatchUI SDL2::SDL2)
+target_link_libraries(${PROJECT_NAME} SDL2::SDL2)
 add_definitions(-DSDL_MAIN_HANDLED)
 
 # link mpv libraries
-target_link_libraries(syncwatchUI mpv)
+target_link_libraries(${PROJECT_NAME} mpv)
 
-# include youtube-dl.exe on windows
+# link fmt (fmt::format is used for string formatting)
+target_link_libraries(${PROJECT_NAME} fmt)
+
+# link libtorrent
+target_link_libraries(${PROJECT_NAME} torrent-rasterbar)
 if (WIN32)
+    target_link_libraries(${PROJECT_NAME} ws2_32)
+endif()
+
+if (WIN32)
+    # include youtube-dl.exe on windows
     install(FILES "youtube-dl.exe" DESTINATION .)
+    #install(FILES "C:/msys64/mingw64/bin/mpv-1.dll" DESTINATION .)
+
+    install(TARGETS ${PROJECT_NAME} DESTINATION .
+    RUNTIME_DEPENDENCIES
+        DIRECTORIES "C:/msys64/mingw64/bin/"
+        PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+        POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+    )
 endif()
 # TODO: on linux optional package dependency to youtube-dl
 
-# link fmt (fmt::format is used for string formatting)
-target_link_libraries(syncwatchUI fmt)
+set (CPACK_NSIS_MODIFY_PATH "ON")
 
-# link libtorrent
-target_link_libraries(syncwatchUI torrent-rasterbar)
-if (WIN32)
-    target_link_libraries(syncwatchUI ws2_32)
-endif()
-
-# cpack
-#install(TARGETS syncwatchUI RUNTIME_DEPENDENCIES DESTINATION .)
-#include(InstallRequiredSystemLibraries)
-#include(CPack)
+include(InstallRequiredSystemLibraries)
+include(CPack)

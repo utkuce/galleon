@@ -193,4 +193,5 @@ void set_video_source(const char* source)
     }
 
     interface::loading_source = true;
+    videoevent::loaded_video = false;
 }

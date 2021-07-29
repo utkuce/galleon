@@ -50,10 +50,15 @@ if (WIN32)
         PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
         POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
     )
+
 endif()
 # TODO: on linux optional package dependency to youtube-dl
 
-set (CPACK_NSIS_MODIFY_PATH "ON")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/bin")
+
+set(CPACK_PACKAGE_EXECUTABLES ${PROJECT_NAME} ${PROJECT_NAME})
+set(CPACK_NSIS_MODIFY_PATH "ON")
+set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
 
 include(InstallRequiredSystemLibraries)
 include(CPack)

@@ -29,6 +29,7 @@ std::string torrent::speed = "0 mb/s";
 std::string torrent::time = "-";
 int torrent::peers = 0;
 
+std::string save_path;
 std::string video_path; //TODO: make vector of paths
 void set_video_path(lt::torrent_handle* h)
 {
@@ -111,7 +112,19 @@ void torrent_thread(const char *magnet_link)
         if (atp.info_hashes == magnet.info_hashes)
             magnet = std::move(atp);
     }
-    magnet.save_path = "."; // save in current dir
+    
+    std::stringstream save_path_ss;
+    
+    #ifdef unix
+    save_path_ss << getenv("HOME") << "/Downloads/syncwatch";
+    #elif defined(_WIN32)
+    save_path_ss << getenv("HOMEDRIVE") << getenv("HOMEPATH") << "\\Downloads\\syncwatch";
+    #endif
+
+    magnet.save_path = save_path_ss.str(); 
+    save_path = magnet.save_path;
+    std::cout << "Saving files to: " << magnet.save_path << std::endl;
+
     ses.async_add_torrent(std::move(magnet));
 
     // this is the handle we'll set once we get the notification of it being
@@ -197,9 +210,12 @@ void torrent_thread(const char *magnet_link)
                     {
                         set_video_path(&h);
 
-                        if (!video_path.empty())
+                        if (!video_path.empty() && !save_path.empty())
                         {   
-                            set_video_source(video_path.c_str());
+                            std::stringstream source_path;
+                            source_path << save_path << "/" << video_path;
+                            std::cout << "Source path: " << source_path.str() << std::endl;
+                            set_video_source(source_path.str().c_str());
                         }
                     }
                 }

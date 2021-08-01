@@ -62,64 +62,72 @@ std::vector<char> load_file(char const *filename)
 
 void torrent_thread(const char *magnet_link)
 {
-    lt::settings_pack pack;
-    pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::error | lt::alert_category::storage | lt::alert_category::status);
-
-    lt::session ses(pack);
-    clk::time_point last_save_resume = clk::now();
-
-    // load resume data from disk and pass it in as we add the magnet link
-    std::ifstream ifs(".resume_file", std::ios_base::binary);
-    ifs.unsetf(std::ios_base::skipws);
-    std::vector<char> buf{std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
-
-    lt::add_torrent_params magnet = lt::parse_magnet_uri(magnet_link);
-    if (buf.size())
+    try 
     {
-        lt::add_torrent_params atp = lt::read_resume_data(buf);
-        if (atp.info_hashes == magnet.info_hashes)
-            magnet = std::move(atp);
-    }
-    
-    // set torrent save path
-    std::stringstream save_path_ss;
-    
-    #ifdef unix
-    save_path_ss << getenv("HOME") << "/Downloads/syncwatch";
-    #elif defined(_WIN32)
-    save_path_ss << getenv("HOMEDRIVE") << getenv("HOMEPATH") << "\\Downloads\\syncwatch";
-    #endif
+        lt::settings_pack pack;
+        pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::error | lt::alert_category::storage | lt::alert_category::status);
 
-    magnet.save_path = save_path_ss.str(); 
-    torrent::save_path = magnet.save_path;
-    std::cout << "Saving files to: " << magnet.save_path << std::endl;
+        lt::session ses(pack);
+        clk::time_point last_save_resume = clk::now();
 
-    // add torrent to session
-    ses.async_add_torrent(std::move(magnet));
+        // load resume data from disk and pass it in as we add the magnet link
+        std::ifstream ifs(".resume_file", std::ios_base::binary);
+        ifs.unsetf(std::ios_base::skipws);
+        std::vector<char> buf{std::istream_iterator<char>(ifs), std::istream_iterator<char>()};
 
-    // this is the handle we'll set once we get the notification of it being
-    // added
-    lt::torrent_handle h;
-
-    for(;;)
-    {
-        bool events_done = torrent::events(ses, h);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-        // ask the session to post a state_update_alert, to update our
-        // state output for the torrent
-        ses.post_torrent_updates();
-
-        // save resume data once every 30 seconds
-        if (clk::now() - last_save_resume > std::chrono::seconds(30))
+        lt::add_torrent_params magnet = lt::parse_magnet_uri(magnet_link);
+        if (buf.size())
         {
-            h.save_resume_data(lt::torrent_handle::save_info_dict);
-            last_save_resume = clk::now();
+            lt::add_torrent_params atp = lt::read_resume_data(buf);
+            if (atp.info_hashes == magnet.info_hashes)
+                magnet = std::move(atp);
         }
+        
+        // set torrent save path
+        std::stringstream save_path_ss;
+        
+        #ifdef unix
+        save_path_ss << getenv("HOME") << "/Downloads/syncwatch";
+        #elif defined(_WIN32)
+        save_path_ss << getenv("HOMEDRIVE") << getenv("HOMEPATH") << "\\Downloads\\syncwatch";
+        #endif
 
-        if (events_done)
-            return;
+        magnet.save_path = save_path_ss.str(); 
+        torrent::save_path = magnet.save_path;
+        std::cout << "Saving files to: " << magnet.save_path << std::endl;
+
+        // add torrent to session
+        ses.async_add_torrent(std::move(magnet));
+
+        // this is the handle we'll set once we get the notification of it being
+        // added
+        lt::torrent_handle h;
+
+        for(;;)
+        {
+            bool events_done = torrent::events(ses, h);
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+            // ask the session to post a state_update_alert, to update our
+            // state output for the torrent
+            ses.post_torrent_updates();
+
+            // save resume data once every 30 seconds
+            if (clk::now() - last_save_resume > std::chrono::seconds(30))
+            {
+                h.save_resume_data(lt::torrent_handle::save_info_dict);
+                last_save_resume = clk::now();
+            }
+
+            if (events_done)
+                return;
+        }
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        //TODO: show error box on UI
     }
 }
 
